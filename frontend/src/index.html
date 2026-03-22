@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Cursos - Aprenda com os Melhores</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <div class="logo">
+                    <h2>🎓 EduPlataforma</h2>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#cursos">Cursos</a></li>
+                    <li><a href="#sobre">Sobre</a></li>
+                    <li><a href="#afiliados">Seja Afiliado</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Transforme sua Carreira <span class="highlight">Hoje</span></h1>
+                    <p>Aprenda com os melhores profissionais do mercado e conquiste seus objetivos com nossos cursos completos e atualizados.</p>
+                    <div class="hero-buttons">
+                        <button class="btn-primary" onclick="scrollToCursos()">Ver Cursos</button>
+                        <button class="btn-secondary" onclick="openChatbot()">💬 Falar com IA</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cursos" class="cursos">
+            <div class="container">
+                <h2>Cursos em Destaque</h2>
+                <div class="cursos-grid" id="cursos-grid">
+                    <!-- Cursos serão carregados via JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal do Chatbot -->
+    <div id="chatbot-modal" class="modal">
+        <div class="modal-content chatbot-container">
+            <div class="chatbot-header">
+                <h3>🤖 Assistente Virtual</h3>
+                <span class="close" onclick="closeChatbot()">&times;</span>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot">
+                    Olá! 👋 Sou seu assistente virtual. Posso ajudar com informações sobre os cursos, preços, formas de pagamento e muito mais! Como posso ajudar você hoje?
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Digite sua mensagem..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
