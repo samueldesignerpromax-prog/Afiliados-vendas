@@ -1,0 +1,14 @@
+{
+  "name": "plataforma-cursos-frontend",
+  "version": "1.0.0",
+  "description": "Plataforma de venda de cursos com afiliados",
+  "main": "index.html",
+  "scripts": {
+    "dev": "live-server src",
+    "build": "echo 'Build do frontend'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
