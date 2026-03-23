@@ -1,14 +1,7 @@
-from flask import Flask, request, jsonify, session
-from flask_cors import CORS
-import uuid
-
-app = Flask(__name__)
-app.secret_key = "sua-chave-secreta-aqui"
-CORS(app)
-
-# Importar serviços
+from flask import request, jsonify
 from services import ChatbotIA, PagamentoService, AfiliadoService
 from models import Usuario, Curso, Venda
+from datetime import datetime
 
 # Inicializar serviços
 chatbot = ChatbotIA()
@@ -17,51 +10,35 @@ afiliado_service = AfiliadoService()
 
 # Banco de dados em memória
 usuarios = {}
-cursos = {}
+cursos = {
+    1: Curso(1, "Marketing Digital", 497.00, "Aprenda as melhores estratégias de marketing digital", "link-1"),
+    2: Curso(2, "Python Programação", 397.00, "Do zero ao avançado em Python", "link-2"),
+    3: Curso(3, "IA para Negócios", 597.00, "Aplique inteligência artificial no seu negócio", "link-3")
+}
 vendas = {}
 next_usuario_id = 1
 next_venda_id = 1
-
-# Cadastrar cursos iniciais
-cursos[1] = Curso(1, "Curso de Marketing Digital", 497.00, "Aprenda as melhores estratégias de marketing digital", "link-afiliado-1")
-cursos[2] = Curso(2, "Curso de Programação Python", 397.00, "Do zero ao avançado em Python", "link-afiliado-2")
-cursos[3] = Curso(3, "Curso de IA para Negócios", 597.00, "Aplique inteligência artificial no seu negócio", "link-afiliado-3")
 
 # Cadastrar afiliados de exemplo
 afiliado_service.cadastrar_afiliado("João Silva", 30)
 afiliado_service.cadastrar_afiliado("Maria Santos", 35)
 
-@app.route('/')
-def index():
-    return jsonify({"message": "Plataforma de Cursos com Afiliados - API", "status": "online"})
-
-@app.route('/api/chatbot', methods=['POST'])
-def chatbot_message():
-    data = request.json
-    mensagem = data.get('mensagem', '')
-    
-    resposta = chatbot.responder(mensagem)
-    
-    return jsonify({
-        "resposta": resposta,
-        "timestamp": datetime.now().isoformat()
-    })
-
 @app.route('/api/cursos', methods=['GET'])
 def listar_cursos():
-    cursos_list = [curso.to_dict() for curso in cursos.values()]
-    return jsonify(cursos_list)
+    """Lista todos os cursos disponíveis"""
+    return jsonify([curso.to_dict() for curso in cursos.values()])
 
 @app.route('/api/cursos/<int:curso_id>', methods=['GET'])
 def get_curso(curso_id):
+    """Obtém detalhes de um curso específico"""
     curso = cursos.get(curso_id)
     if not curso:
         return jsonify({"error": "Curso não encontrado"}), 404
-    
     return jsonify(curso.to_dict())
 
 @app.route('/api/cursos/<int:curso_id>/link-afiliado', methods=['POST'])
 def gerar_link_afiliado(curso_id):
+    """Gera link de afiliado para um curso"""
     data = request.json
     afiliado_id = data.get('afiliado_id')
     
@@ -70,15 +47,23 @@ def gerar_link_afiliado(curso_id):
         return jsonify({"error": "Curso não encontrado"}), 404
     
     link = chatbot.gerar_link_afiliado(curso_id, afiliado_id)
-    
     return jsonify({
         "link": link,
         "curso": curso.nome,
         "afiliado_id": afiliado_id
     })
 
+@app.route('/api/chatbot', methods=['POST'])
+def chatbot_message():
+    """Processa mensagens do chatbot"""
+    data = request.json
+    mensagem = data.get('mensagem', '')
+    resposta = chatbot.responder(mensagem)
+    return jsonify({"resposta": resposta})
+
 @app.route('/api/comprar', methods=['POST'])
 def comprar_curso():
+    """Processa a compra de um curso"""
     global next_usuario_id, next_venda_id
     
     data = request.json
@@ -87,12 +72,11 @@ def comprar_curso():
     usuario_email = data.get('usuario_email')
     afiliado_id = data.get('afiliado_id')
     
-    # Verificar curso
     curso = cursos.get(curso_id)
     if not curso:
         return jsonify({"error": "Curso não encontrado"}), 404
     
-    # Criar ou buscar usuário
+    # Buscar ou criar usuário
     usuario = None
     for u in usuarios.values():
         if u.email == usuario_email:
@@ -104,14 +88,12 @@ def comprar_curso():
         usuarios[next_usuario_id] = usuario
         next_usuario_id += 1
     
-    # Verificar se já comprou o curso
+    # Verificar se já possui o curso
     if curso_id in usuario.cursos_comprados:
         return jsonify({"error": "Usuário já possui este curso"}), 400
     
     # Buscar afiliado
-    afiliado = None
-    if afiliado_id:
-        afiliado = afiliado_service.get_afiliado(afiliado_id)
+    afiliado = afiliado_service.get_afiliado(afiliado_id) if afiliado_id else None
     
     # Criar venda
     venda = Venda(next_venda_id, usuario, curso, afiliado)
@@ -119,9 +101,7 @@ def comprar_curso():
     next_venda_id += 1
     
     # Processar pagamento
-    pagamento_aprovado = pagamento_service.processar_pagamento(venda)
-    
-    if pagamento_aprovado:
+    if pagamento_service.processar_pagamento(venda):
         return jsonify({
             "status": "success",
             "message": "Compra realizada com sucesso!",
@@ -129,26 +109,22 @@ def comprar_curso():
             "curso": curso.nome,
             "valor": curso.preco,
             "acesso_liberado": True,
-            "afiliado": afiliado.nome if afiliado else None,
-            "comissao": afiliado.saldo if afiliado else 0
+            "afiliado": afiliado.nome if afiliado else None
         })
     else:
-        return jsonify({
-            "status": "error",
-            "message": "Pagamento não aprovado. Tente novamente."
-        }), 400
+        return jsonify({"status": "error", "message": "Pagamento não aprovado"}), 400
 
 @app.route('/api/afiliados', methods=['GET'])
 def listar_afiliados():
-    afiliados_list = [a.to_dict() for a in afiliado_service.listar_afiliados()]
-    return jsonify(afiliados_list)
+    """Lista todos os afiliados"""
+    return jsonify([a.to_dict() for a in afiliado_service.listar_afiliados()])
 
 @app.route('/api/afiliados/<int:afiliado_id>/saldo', methods=['GET'])
 def get_saldo_afiliado(afiliado_id):
+    """Obtém saldo de um afiliado"""
     afiliado = afiliado_service.get_afiliado(afiliado_id)
     if not afiliado:
         return jsonify({"error": "Afiliado não encontrado"}), 404
-    
     return jsonify({
         "nome": afiliado.nome,
         "saldo": afiliado.saldo,
@@ -158,7 +134,5 @@ def get_saldo_afiliado(afiliado_id):
 
 @app.route('/api/vendas', methods=['GET'])
 def listar_vendas():
-    vendas_list = [venda.to_dict() for venda in vendas.values()]
-    return jsonify(vendas_list)
-
-from datetime import datetime
+    """Lista todas as vendas"""
+    return jsonify([venda.to_dict() for venda in vendas.values()])
