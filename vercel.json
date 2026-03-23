@@ -6,7 +6,15 @@
       "use": "@vercel/python"
     },
     {
-      "src": "frontend/src/**/*",
+      "src": "frontend/src/css/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "frontend/src/js/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "frontend/src/index.html",
       "use": "@vercel/static"
     }
   ],
@@ -16,8 +24,16 @@
       "dest": "backend/main.py"
     },
     {
-      "src": "/(.*)",
-      "dest": "frontend/src/index.html"
+      "src": "/css/(.*)",
+      "dest": "/frontend/src/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/frontend/src/js/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/frontend/src/index.html"
     }
   ]
 }
