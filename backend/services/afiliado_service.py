@@ -1,10 +1,11 @@
+from models import Afiliado
+
 class AfiliadoService:
     def __init__(self):
         self.afiliados = {}
         self.proximo_id = 1
     
     def cadastrar_afiliado(self, nome: str, comissao: float = 30.0):
-        from models import Afiliado
         afiliado = Afiliado(self.proximo_id, nome, comissao)
         self.afiliados[afiliado.id] = afiliado
         self.proximo_id += 1
