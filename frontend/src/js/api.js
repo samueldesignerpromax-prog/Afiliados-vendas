@@ -1,6 +1,4 @@
-const API_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://seu-dominio.vercel.app/api'
-    : 'http://localhost:5000/api';
+const API_URL = '/api';
 
 class API {
     static async getCursos() {
@@ -31,17 +29,6 @@ class API {
                 usuario_email: usuarioEmail,
                 afiliado_id: afiliadoId
             })
-        });
-        return await response.json();
-    }
-    
-    static async getLinkAfiliado(cursoId, afiliadoId) {
-        const response = await fetch(`${API_URL}/cursos/${cursoId}/link-afiliado`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ afiliado_id: afiliadoId })
         });
         return await response.json();
     }
